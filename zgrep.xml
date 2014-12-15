@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Export generator="Cache" version="25" zv="Cache for UNIX (Apple Mac OS X for x86-64) 2015.1 (Build 281U)" ts="2014-12-15 10:42:51">
-<Routine name="%zgrep" type="MAC" languagemode="0" timestamp="63536,38447.582489"><![CDATA[
+<Export generator="Cache" version="25" zv="Cache for UNIX (Apple Mac OS X for x86-64) 2015.1 (Build 281U)" ts="2014-12-15 14:21:07">
+<Routine name="%zgrep" type="MAC" languagemode="0" timestamp="63536,51648.591303"><![CDATA[
 %zgrep
 	quit
 
@@ -20,7 +20,7 @@ zw(arg,filter,regex=0) public
 	do redirect()
 	zwrite @arg
 	do endredirect()
-	do display(filter,regex)
+	do display(filter,regex,0)
 }
 
 gd(filter,regex=0) public
@@ -29,7 +29,7 @@ gd(filter,regex=0) public
 	do redirect(1)
 	do INT^%GD($namespace)
 	do endredirect()
-	do display(filter,regex)
+	do display(filter,regex,0)
 }
 rd(filter,regex=0) public
 {
@@ -56,7 +56,12 @@ syslog(filter,regex=0) public
 	do redirect()
 	do INT^SYSLOG
 	do endredirect()
-	do display(filter,regex)
+	//output is:
+	// Line #1: <empty>
+	// Line #2: Printing last <n> entries...
+	// Line #3: <header>
+	kill %output(1),%output(2)
+	do display(filter,regex,1)
 }
 
 displayrs(rs,filter,regex)
@@ -83,11 +88,17 @@ displayrs(rs,filter,regex)
 		}
 	}
 }
-display(filter,regex)
+display(filter,regex,header=0)
 {
 	if regex,$extract(filter)'="^" set filter = ".*"_filter
 	if regex,$extract(filter,*)'="$" set filter = filter_".*"
 	set i=""
+	
+	if header {
+		set i = $order(%output(i),1,line)
+		if i="" { return }
+		else { write line,! }
+	}
 	for  {
 		set i=$order(%output(i),1,line)
 		if i="" quit
