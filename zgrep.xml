@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25" zv="Cache for UNIX (Apple Mac OS X for x86-64) 2015.1 (Build 281U)" ts="2014-12-15 09:09:04">
+<Routine name="%zgrep" type="MAC" languagemode="0" timestamp="63536,32647.626363"><![CDATA[
+%zgrep
+	quit
+
+ss(filter,regex=0) public
+{
+	//ALL^%SS doesn't work with redirection (?)
+	set stmt=##class(%SQL.Statement).%New()
+	set sc=stmt.%PrepareClassQuery("%SYS.ProcessQuery","SS")
+	set rs=stmt.%Execute()
+	
+	do displayrs(rs,filter,regex)
+}
+
+zw(arg,filter,regex=0) public
+{
+	new %output,%tab
+	do redirect()
+	zwrite @arg
+	do endredirect()
+	do display(filter,regex)
+}
+
+gd(filter,regex=0) public
+{
+	new //INT^%GD is not procedureblock
+	do redirect(1)
+	do INT^%GD($namespace)
+	do endredirect()
+	do display(filter,regex)
+}
+rd(filter,regex=0) public
+{
+	set stmt=##class(%SQL.Statement).%New()
+	set sc=stmt.%PrepareClassQuery("%Library.Routine","RoutineList")
+	set rs=stmt.%Execute()
+	
+	do displayrs(rs,filter,regex)
+}
+cd(filter,regex=0) public
+{
+	set sql="select name from %Dictionary.ClassDefinition"
+	set stmt = ##class(%SQL.Statement).%New()
+	set sc = stmt.%Prepare(sql)
+	
+	set rs = stmt.%Execute()
+	do displayrs(rs,filter,regex)
+}
+syslog(filter,regex=0) public
+{
+	new //INT^SYSLOG is not procedureblock
+	new $namespace
+	set $namespace="%SYS"
+	do redirect()
+	do INT^SYSLOG
+	do endredirect()
+	do display(filter,regex)
+}
+
+displayrs(rs,filter,regex)
+{
+	set meta = rs.%GetMetadata()		
+	
+	set line=""
+	for i=1:1:meta.columnCount {
+		set line = line_$s(line="":"",1:$C(9))_meta.columns.GetAt(i).colName
+	}
+	write line,!
+	
+	while (rs.%Next()) {
+		set line = ""
+		for i=1:1:meta.columnCount {
+			set line = line_$s(line="":"",1:$C(9))_rs.%GetData(i)
+		}
+		if regex {
+			if $match(line,filter) write line,!
+		} elseif line[filter {
+			write line,!
+		}
+	}
+}
+display(filter,regex)
+{
+	set i=""
+	for  {
+		set i=$order(%output(i),1,line)
+		if i="" quit
+		
+		if regex {
+			if $match(line,filter) write line,!
+		}
+		elseif line[filter {
+			write line,!
+		}
+	}
+}
+ //Redirection
+ #define newline set %output($increment(%output))=""
+ #define append(%s) set %output(%output)=%output(%output)_%s
+redirect(tab=0)
+	$$$newline
+	set %tab=tab
+	use $io::("^"_$zname) ;specify routine to redirect IO to (the current routine)
+	do $zutil(82,12,1) ;enable IO redirection
+	quit
+	
+endredirect()
+	do $zutil(82,12,0) ;disable IO redirection
+	quit
+	
+rstr(sz,to) quit
+wchr(s) $$$append($char(s)) quit
+wff()  $$$append($char(12)) quit
+wnl() $$$newline quit
+wstr(s) $$$append(s) quit
+wtab(s)  if $g(%tab){$$$newline} else {$$$append($char(9))} quit
+output(s) $$$append(s) quit
+]]></Routine>
+</Export>
