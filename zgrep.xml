@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Export generator="Cache" version="25" zv="Cache for UNIX (Apple Mac OS X for x86-64) 2015.1 (Build 281U)" ts="2014-12-15 09:09:04">
-<Routine name="%zgrep" type="MAC" languagemode="0" timestamp="63536,32647.626363"><![CDATA[
+<Export generator="Cache" version="25" zv="Cache for UNIX (Apple Mac OS X for x86-64) 2015.1 (Build 281U)" ts="2014-12-15 10:42:51">
+<Routine name="%zgrep" type="MAC" languagemode="0" timestamp="63536,38447.582489"><![CDATA[
 %zgrep
 	quit
 
@@ -61,18 +61,20 @@ syslog(filter,regex=0) public
 
 displayrs(rs,filter,regex)
 {
+	if regex,$extract(filter)'="^" set filter = ".*"_filter
+	if regex,$extract(filter,*)'="$" set filter = filter_".*"
 	set meta = rs.%GetMetadata()		
 	
 	set line=""
 	for i=1:1:meta.columnCount {
-		set line = line_$s(line="":"",1:$C(9))_meta.columns.GetAt(i).colName
+		set line = line_$select((line="")||(i=meta.columnCount):"",1:$char(9))_meta.columns.GetAt(i).colName
 	}
 	write line,!
 	
 	while (rs.%Next()) {
 		set line = ""
 		for i=1:1:meta.columnCount {
-			set line = line_$s(line="":"",1:$C(9))_rs.%GetData(i)
+			set line = line_$select((line="")||(i=meta.columnCount):"",1:$char(9))_rs.%GetData(i)
 		}
 		if regex {
 			if $match(line,filter) write line,!
@@ -83,6 +85,8 @@ displayrs(rs,filter,regex)
 }
 display(filter,regex)
 {
+	if regex,$extract(filter)'="^" set filter = ".*"_filter
+	if regex,$extract(filter,*)'="$" set filter = filter_".*"
 	set i=""
 	for  {
 		set i=$order(%output(i),1,line)
