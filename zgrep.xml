@@ -6,8 +6,6 @@
 
 locktab(filter,regex=0) public
 {
-	new $namespace
-	set $namespace="%SYS"
 	set stmt=##class(%SQL.Statement).%New()
 	set sc=stmt.%PrepareClassQuery("%SYS.LockQuery","List")
 	if 'sc do $system.OBJ.DisplayError(sc) quit
