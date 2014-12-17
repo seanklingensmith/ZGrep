@@ -1,9 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Export generator="Cache" version="25" zv="Cache for UNIX (Apple Mac OS X for x86-64) 2015.1 (Build 281U)" ts="2014-12-15 14:21:07">
-<Routine name="%zgrep" type="MAC" languagemode="0" timestamp="63536,51648.591303"><![CDATA[
+<Export generator="Cache" version="25">
+<Routine name="%zgrep" type="MAC" languagemode="0"><![CDATA[
 %zgrep
 	quit
 
+locktab(filter,regex=0) public
+{
+	new $namespace
+	set $namespace="%SYS"
+	set stmt=##class(%SQL.Statement).%New()
+	set sc=stmt.%PrepareClassQuery("%SYS.LockQuery","List")
+	if 'sc do $system.OBJ.DisplayError(sc) quit
+	set rs=stmt.%Execute()
+	
+	do displayrs(rs,filter,regex)
+}
 ss(filter,regex=0) public
 {
 	//ALL^%SS doesn't work with redirection (?)
